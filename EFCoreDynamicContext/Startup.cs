@@ -37,47 +37,11 @@ namespace EFCoreDynamicContext
                 .AddNewtonsoftJson();
             services.AddRazorPages();
 
-            RegisterDynamicDbContexts(services, (p, opt) => opt.UseSqlServer("connection"));
+            services.AddDynamicDbContexts((p, opt) => opt.UseSqlServer("connection"));
 
             services.AddScoped<IUserService, UserService>();
         }
-
-        private void RegisterDynamicDbContexts(IServiceCollection services, Action<IServiceProvider, DbContextOptionsBuilder> opt)
-        {
-            // Register the DB Context - Register our generic context as well.
-            services.TryAdd(new ServiceDescriptor(typeof(DynamicDbContext<>), typeof(DynamicDbContext<>), ServiceLifetime.Scoped));
-
-            //var dbContextOptionsType = typeof(DbContextOptions<>).MakeGenericType(typeof(DynamicDbContext<>));
-
-            //serviceCollection.TryAdd(
-            //    new ServiceDescriptor(
-            //        dbContextOptionsType,
-            //        p => DbContextOptionsFactory<TContextImplementation>(p, optionsAction),
-            //        optionsLifetime));
-
-            services.AddSingleton(new DynamicDbContextOptions
-            {
-                ValidateSetAccess = true
-            });
-
-            services.TryAdd(
-                new ServiceDescriptor(
-                    typeof(DbContextOptions),
-                    p => 
-                    {
-                        var builder = new DbContextOptionsBuilder();
-
-                        builder.UseApplicationServiceProvider(p);
-
-                        // Call configuration options.
-                        opt(p, builder);
-
-                        return builder.Options;
-                    },
-                    ServiceLifetime.Scoped));
-
-        }
-
+    
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
